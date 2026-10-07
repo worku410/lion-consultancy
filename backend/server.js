@@ -1,6 +1,6 @@
 /* =========================================================
    LION CONSULTANCY
-   MAIN EXPRESS SERVER
+   MAIN EXPRESS API SERVER
    ========================================================= */
 
 "use strict";
@@ -9,8 +9,8 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 const cookieParser = require("cookie-parser");
+
 /* =========================================================
    DATABASE
    ========================================================= */
@@ -23,22 +23,21 @@ const { connectDB } = require("./config/db");
 
 const employeeRoutes = require("./routes/employee.routes");
 const applicationRoutes = require("./routes/application.routes");
-const adminRoutes =
-    require("./routes/admin.routes");
+
+const adminRoutes = require("./routes/admin.routes");
 const adminApplicationRoutes = require("./routes/admin.application.routes");
-const adminDashboardRoutes =
-    require("./routes/admin.dashboard.routes");
+const adminDashboardRoutes = require("./routes/admin.dashboard.routes");
 
-    const studentRoutes = require("./routes/student.routes");
+const studentRoutes = require("./routes/student.routes");
 
-    const inquiryRoutes = require("./routes/inquiry.routes");
+const inquiryRoutes = require("./routes/inquiry.routes");
 const adminInquiryRoutes = require("./routes/admin.inquiry.routes");
+
 /* =========================================================
    APP INITIALIZATION
    ========================================================= */
 
 const app = express();
-
 
 /* =========================================================
    ENVIRONMENT
@@ -49,21 +48,26 @@ const PORT = process.env.PORT || 5000;
 const NODE_ENV =
     process.env.NODE_ENV || "development";
 
+/*
+ * Frontend URL
+ *
+ * Set this in Render Environment Variables:
+ *
+ * FRONTEND_URL=https://your-frontend-url.onrender.com
+ *
+ * For local development:
+ *
+ * FRONTEND_URL=http://localhost:5500
+ */
 
-/* =========================================================
-   FRONTEND PATH
-   ========================================================= */
-
-const frontendPath =
-    path.join(__dirname, "..", "fronted");
-
+const FRONTEND_URL =
+    process.env.FRONTEND_URL || "http://localhost:5500";
 
 /* =========================================================
    DATABASE CONNECTION
    ========================================================= */
 
 connectDB();
-
 
 /* =========================================================
    GLOBAL MIDDLEWARE
@@ -79,7 +83,6 @@ app.use(
     })
 );
 
-
 /*
  * URL encoded request body
  */
@@ -90,54 +93,140 @@ app.use(
         limit: "2mb"
     })
 );
-app.use(cookieParser());
 
 /*
- * CORS
+ * Cookies
  */
+
+app.use(cookieParser());
+
+/* =========================================================
+   CORS
+   ========================================================= */
 
 app.use(
     cors({
-        origin: true,
+        origin: function (origin, callback) {
+
+            /*
+             * Allow requests with no origin.
+             *
+             * Useful for:
+             * - Postman
+             * - server-to-server requests
+             * - local API testing
+             */
+
+            if (!origin) {
+                return callback(null, true);
+            }
+
+            /*
+             * Development / local frontend
+             */
+
+            const allowedOrigins = [
+                FRONTEND_URL,
+                "http://localhost:5500",
+                "http://127.0.0.1:5500"
+            ];
+
+            /*
+             * Avoid duplicate values
+             */
+
+            const uniqueOrigins = [
+                ...new Set(
+                    allowedOrigins.filter(Boolean)
+                )
+            ];
+
+            if (
+                uniqueOrigins.includes(origin)
+            ) {
+                return callback(null, true);
+            }
+
+            /*
+             * During development, allow the request
+             * rather than crashing the API.
+             *
+             * In production, FRONTEND_URL should be
+             * configured with the real Render frontend URL.
+             */
+
+            if (
+                NODE_ENV !== "production"
+            ) {
+                return callback(null, true);
+            }
+
+            return callback(
+                new Error(
+                    "CORS policy: Origin not allowed."
+                )
+            );
+        },
+
         credentials: true
     })
 );
-
 
 /* =========================================================
    REQUEST LOGGING
    ========================================================= */
 
-app.use((req, res, next) => {
+app.use(
+    (req, res, next) => {
 
-    console.log(
-        `${new Date().toISOString()} | ${req.method} ${req.originalUrl}`
-    );
+        console.log(
+            `${new Date().toISOString()} | ${req.method} ${req.originalUrl}`
+        );
 
-    next();
-});
-
+        next();
+    }
+);
 
 /* =========================================================
-   HEALTH CHECK
+   ROOT API RESPONSE
    ========================================================= */
-/* =========================================================
-   WEBSITE HOME PAGE
-   ========================================================= */
+
+/*
+ * IMPORTANT:
+ *
+ * The backend does NOT serve the frontend.
+ *
+ * The frontend has its own Render Static Site.
+ */
 
 app.get(
     "/",
     (req, res) => {
 
-        res.sendFile(
-            path.join(
-                frontendPath,
-                "index.html"
-            )
-        );
+        res.status(200).json({
+
+            success: true,
+
+            service:
+                "Lion Consultancy API",
+
+            status:
+                "online",
+
+            message:
+                "Lion Consultancy backend API is running.",
+
+            environment:
+                NODE_ENV,
+
+            health:
+                "/api/health",
+
+            timestamp:
+                new Date().toISOString()
+        });
     }
 );
-
 
 /* =========================================================
    API HEALTH CHECK
@@ -157,12 +246,14 @@ app.get(
             status:
                 "online",
 
+            environment:
+                NODE_ENV,
+
             timestamp:
                 new Date().toISOString()
         });
     }
 );
-
 
 /* =========================================================
    EMPLOYEE API
@@ -173,7 +264,6 @@ app.use(
     employeeRoutes
 );
 
-
 /* =========================================================
    STUDENT APPLICATION API
    ========================================================= */
@@ -183,44 +273,59 @@ app.use(
     applicationRoutes
 );
 
-app.use("/api/admin", adminRoutes);
+/* =========================================================
+   ADMIN API
+   ========================================================= */
 
-app.use("/api/admin/applications", adminApplicationRoutes);
+app.use(
+    "/api/admin",
+    adminRoutes
+);
 
-app.use("/api/inquiries", inquiryRoutes);
+/* =========================================================
+   ADMIN APPLICATION API
+   ========================================================= */
+
+app.use(
+    "/api/admin/applications",
+    adminApplicationRoutes
+);
+
+/* =========================================================
+   INQUIRY API
+   ========================================================= */
+
+app.use(
+    "/api/inquiries",
+    inquiryRoutes
+);
+
+/* =========================================================
+   ADMIN DASHBOARD API
+   ========================================================= */
 
 app.use(
     "/api/admin/dashboard",
     adminDashboardRoutes
 );
 
-app.use("/api/admin/students", studentRoutes);
-
-app.use("/api/admin/inquiries", adminInquiryRoutes);
 /* =========================================================
-   STATIC FRONTEND
+   ADMIN STUDENTS API
    ========================================================= */
 
-/*
- * The frontend is located one level above /server.
- *
- * Project:
- *
- * lion-consultancy/
- * ├── server/
- * ├── pages/
- * ├── css/
- * ├── js/
- * ├── images/
- * └── index.html
- */
-
-
-
 app.use(
-    express.static(frontendPath)
+    "/api/admin/students",
+    studentRoutes
 );
 
+/* =========================================================
+   ADMIN INQUIRIES API
+   ========================================================= */
+
+app.use(
+    "/api/admin/inquiries",
+    adminInquiryRoutes
+);
 
 /* =========================================================
    404 HANDLER
@@ -234,14 +339,13 @@ app.use(
             success: false,
 
             message:
-                "Route not found.",
+                "API route not found.",
 
             path:
                 req.originalUrl
         });
     }
 );
-
 
 /* =========================================================
    GLOBAL ERROR HANDLER
@@ -255,11 +359,9 @@ app.use(
             err
         );
 
-
         if (res.headersSent) {
             return next(err);
         }
-
 
         res.status(
             err.status || 500
@@ -275,60 +377,63 @@ app.use(
     }
 );
 
-
 /* =========================================================
    START SERVER
    ========================================================= */
 
-const server =
-   app.listen(
+const server = app.listen(
     PORT,
     "0.0.0.0",
-        () => {
+    () => {
 
-            console.log("");
-            console.log(
-                "=========================================="
-            );
-            console.log(
-                "       LION CONSULTANCY API SERVER"
-            );
-            console.log(
-                "=========================================="
-            );
+        console.log("");
+        console.log(
+            "=========================================="
+        );
 
-            console.log(
-                `Environment : ${NODE_ENV}`
-            );
+        console.log(
+            "       LION CONSULTANCY API SERVER"
+        );
 
-            console.log(
-                `Port        : ${PORT}`
-            );
+        console.log(
+            "=========================================="
+        );
 
-            console.log(
-                `URL         : http://localhost:${PORT}`
-            );
+        console.log(
+            `Environment : ${NODE_ENV}`
+        );
 
-            console.log(
-                `Health      : http://localhost:${PORT}/api/health`
-            );
+        console.log(
+            `Port        : ${PORT}`
+        );
 
-            console.log(
-                `Applications: http://localhost:${PORT}/api/applications`
-            );
+        console.log(
+            `Health      : /api/health`
+        );
 
-            console.log(
-                `Employees   : http://localhost:${PORT}/api/employees`
-            );
+        console.log(
+            `Applications: /api/applications`
+        );
 
-            console.log(
-                "=========================================="
-            );
+        console.log(
+            `Employees   : /api/employees`
+        );
 
-            console.log("");
-        }
-    );
+        console.log(
+            `Inquiries   : /api/inquiries`
+        );
 
+        console.log(
+            `Admin       : /api/admin`
+        );
+
+        console.log(
+            "=========================================="
+        );
+
+        console.log("");
+    }
+);
 
 /* =========================================================
    SERVER ERROR HANDLING
@@ -338,7 +443,9 @@ server.on(
     "error",
     (error) => {
 
-        if (error.code === "EADDRINUSE") {
+        if (
+            error.code === "EADDRINUSE"
+        ) {
 
             console.error(
                 `Port ${PORT} is already in use.`
@@ -346,7 +453,6 @@ server.on(
 
             process.exit(1);
         }
-
 
         console.error(
             "Server startup error:",
@@ -356,7 +462,6 @@ server.on(
         process.exit(1);
     }
 );
-
 
 /* =========================================================
    GRACEFUL SHUTDOWN
@@ -369,7 +474,6 @@ process.on(
         console.log(
             "\nShutting down Lion Consultancy server..."
         );
-
 
         server.close(
             () => {
@@ -384,7 +488,6 @@ process.on(
     }
 );
 
-
 process.on(
     "SIGTERM",
     () => {
@@ -392,7 +495,6 @@ process.on(
         console.log(
             "\nSIGTERM received. Shutting down..."
         );
-
 
         server.close(
             () => {
