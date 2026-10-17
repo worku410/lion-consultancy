@@ -48,35 +48,17 @@ document.addEventListener("DOMContentLoaded", () => {
        PAGE LOADER
        ===================================================== */
 
-    function hideLoader() {
+window.addEventListener("load", function () {
+    const loader = document.getElementById("siteLoader");
 
-        if (!loader) {
-            return;
-        }
+    if (loader) {
+        loader.classList.add("loader-hidden");
 
-        loader.classList.add("loaded");
-
-        setTimeout(() => {
-
-            loader.style.opacity = "0";
-            loader.style.visibility = "hidden";
-            loader.style.pointerEvents = "none";
-
-        }, 500);
-
-        setTimeout(() => {
-
+        setTimeout(function () {
             loader.style.display = "none";
-
-        }, 1100);
+        }, 850);
     }
-
-
-    window.addEventListener("load", () => {
-
-        setTimeout(hideLoader, 500);
-
-    });
+});
 
 
     /* Safety fallback */
