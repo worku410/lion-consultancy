@@ -623,32 +623,23 @@ button {
 }
 
 
+
 .hero-background-image {
-
     position: absolute;
-
     inset: 0;
 
-    background-image:
+    /* Your admin photo */
+    background-image: url("../images/admin-photo.png");
 
-        url(
-            "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=2200&q=90"
-        );
+    background-size: cover;
+    background-position: center 35%;
+    background-repeat: no-repeat;
 
-    background-size:
-        cover;
-
-    background-position:
-        center;
-
-    opacity:
-        0.25;
-
-    filter:
-        saturate(0.75)
-        contrast(1.1);
-
+    /* Blend the photo into the dark website design */
+    opacity: 0.25;
+    filter: saturate(0.75) contrast(1.1);
 }
+
 
 
 .hero-overlay {
@@ -6499,4 +6490,196 @@ apply
         min-height: 72px;
     }
 
+}
+/* PREMIUM ROTATING LION CONSULTANCY LOADER */
+#siteLoader {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse at center,
+        #14243b 0%, #080e19 48%, #03060b 100%);
+    transition: opacity .8s ease, visibility .8s ease;
+}
+
+#siteLoader.loader-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.rotating-loader {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 30px;
+}
+
+/* ROTATING ORBITAL RINGS */
+.loader-ring {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    border: 1px solid transparent;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.ring-one {
+    width: 170px;
+    height: 170px;
+    margin-left: -85px;
+    top: 0;
+    border-top-color: #e8bd68;
+    border-right-color: rgba(232, 189, 104, .35);
+    animation: lionSpin 2s linear infinite;
+}
+
+.ring-two {
+    width: 190px;
+    height: 150px;
+    margin-left: -95px;
+    top: 10px;
+    border-bottom-color: #fff0bd;
+    border-left-color: rgba(232, 189, 104, .4);
+    animation: lionSpinReverse 3s linear infinite;
+}
+
+.ring-three {
+    width: 150px;
+    height: 190px;
+    margin-left: -75px;
+    top: -10px;
+    border-top-color: rgba(255,255,255,.8);
+    border-bottom-color: rgba(232,189,104,.6);
+    animation: lionSpin 4s linear infinite;
+}
+
+@keyframes lionSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes lionSpinReverse {
+    from { transform: rotate(360deg); }
+    to   { transform: rotate(0deg); }
+}
+
+/* LOGO */
+.loader-logo-wrap {
+    width: 130px;
+    height: 130px;
+    margin: 20px 0 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(circle, #1b2b42, #070c14);
+    border: 1px solid rgba(232,189,104,.7);
+    box-shadow:
+        0 0 25px rgba(232,189,104,.2),
+        0 0 65px rgba(232,189,104,.1),
+        inset 0 0 25px rgba(232,189,104,.1);
+    animation: logoFloat 3s ease-in-out infinite;
+}
+
+.rotating-logo {
+    width: 82%;
+    height: 82%;
+    object-fit: contain;
+    animation: logoRotate 8s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(232,189,104,.35));
+}
+
+@keyframes logoRotate {
+    from { transform: rotateY(0deg); }
+    to   { transform: rotateY(360deg); }
+}
+
+@keyframes logoFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-7px); }
+}
+
+/* BRAND */
+.rotating-loader h2 {
+    margin: 0;
+    color: #f9f5eb;
+    font-family: "Playfair Display", serif;
+    font-size: clamp(22px, 4vw, 32px);
+    letter-spacing: 4px;
+    font-weight: 600;
+}
+
+.rotating-loader h2 span {
+    color: #e8bd68;
+}
+
+.rotating-loader p {
+    margin: 12px 0 25px;
+    color: #b6c0cf;
+    font-family: "DM Sans", sans-serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+}
+
+/* PROGRESS BAR */
+.loader-track {
+    width: 220px;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: rgba(255,255,255,.12);
+}
+
+.loader-track-fill {
+    width: 35%;
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #9f7434, #fff0bd, #d5a54e);
+    box-shadow: 0 0 12px rgba(232,189,104,.7);
+    animation: loaderProgress 1.6s ease-in-out infinite;
+}
+
+@keyframes loaderProgress {
+    0%   { transform: translateX(-110%); }
+    100% { transform: translateX(320%); }
+}
+
+.loader-status {
+    margin-top: 14px;
+    color: #e8bd68;
+    font: 10px "DM Sans", sans-serif;
+    letter-spacing: 2px;
+    animation: statusPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+    0%, 100% { opacity: .45; }
+    50%      { opacity: 1; }
+}
+
+@media (max-width: 480px) {
+    .ring-one { width: 150px; height: 150px; margin-left: -75px; }
+    .ring-two { width: 170px; height: 135px; margin-left: -85px; }
+    .ring-three { width: 135px; height: 170px; margin-left: -67px; }
+    .loader-logo-wrap { width: 115px; height: 115px; }
+    .rotating-loader h2 { letter-spacing: 2px; }
+    .rotating-loader p { letter-spacing: 1.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .loader-ring,
+    .rotating-logo,
+    .loader-logo-wrap,
+    .loader-track-fill,
+    .loader-status {
+        animation-duration: 8s;
+    }
 }
